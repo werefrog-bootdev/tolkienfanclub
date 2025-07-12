@@ -1,4 +1,5 @@
 from enum import Enum
+from htmlnode import LeafNode
 
 
 class TextType(Enum):
@@ -26,6 +27,44 @@ class TextNode:
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.text}, {self.text_type.value}, {self.url})"
+
+
+def text_node_to_html_node(text_node):
+    def text_handler(node):
+        return LeafNode(None, node.text)
+
+    def bold_handler(node):
+        return LeafNode("b", node.text)
+
+    def italic_handler(node):
+        return LeafNode("i", node.text)
+
+    def code_handler(node):
+        return LeafNode("code", node.text)
+
+    def link_handler(node):
+        if not node.url:
+            raise ValueError("LINK TextNode must have a url")
+        return LeafNode("a", node.text, {"href": node.url})
+
+    def image_handler(node):
+        if not node.url:
+            raise ValueError("IMAGE TextNode must have a url")
+        return LeafNode("img", "", {"src": node.url, "alt": node.text})
+
+    handlers = {
+        TextType.TEXT: text_handler,
+        TextType.BOLD: bold_handler,
+        TextType.ITALIC: italic_handler,
+        TextType.CODE: code_handler,
+        TextType.LINK: link_handler,
+        TextType.IMAGE: image_handler,
+    }
+
+    handler = handlers.get(text_node.text_type)
+    if not handler:
+        raise Exception("Invalid TextType")
+    return handler(text_node)
 
 
 def main():
