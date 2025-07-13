@@ -1,5 +1,6 @@
 import logging
 import shutil
+import sys
 from pathlib import Path
 
 from markdown_extract import markdown_to_html_node
@@ -13,9 +14,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+BASE_PATH = sys.argv[1] if len(sys.argv) > 1 else "/"
 CONTENT_DIR = Path("content")
 STATIC_DIR = Path("static")
-PUBLIC_DIR = Path("public")
+PUBLIC_DIR = Path("docs")
 TEMPLATE_PATH = Path("template.html")
 
 
@@ -61,6 +63,8 @@ def generate_page(from_path: Path, template_path: Path, dest_path: Path) -> None
         template_content
         .replace("{{ Title }}", title)
         .replace("{{ Content }}", html_str)
+        .replace('href="/', f'href="{BASE_PATH}/')
+        .replace('src="/', f'src="{BASE_PATH}/')
     )
 
     dest_path.parent.mkdir(parents=True, exist_ok=True)
