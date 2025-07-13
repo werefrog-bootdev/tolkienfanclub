@@ -13,6 +13,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+CONTENT_DIR = Path("content")
+STATIC_DIR = Path("static")
+PUBLIC_DIR = Path("public")
+TEMPLATE_PATH = Path("template.html")
+
+
 def copy_static(src: Path, dest: Path) -> None:
     """
     Recursively copy all files and subdirectories from `src` to `dest`.
@@ -63,15 +69,12 @@ def generate_page(from_path: Path, template_path: Path, dest_path: Path) -> None
 
 
 def main():
-    static_dir = Path("static")
-    public_dir = Path("public")
-    copy_static(static_dir, public_dir)
-    generate_page(
-        Path("content/index.md"),
-        Path("template.html"),
-        Path("public/index.html")
-    )
+    copy_static(STATIC_DIR, PUBLIC_DIR)
 
+    for markdown_path in CONTENT_DIR.rglob("*.md"):
+        relative_path = markdown_path.relative_to(CONTENT_DIR)
+        output_path = PUBLIC_DIR / relative_path.with_suffix(".html")
+        generate_page(markdown_path, TEMPLATE_PATH, output_path)
 
 
 if __name__ == '__main__':
