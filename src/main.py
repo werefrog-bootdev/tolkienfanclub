@@ -2,6 +2,7 @@ import logging
 import shutil
 from pathlib import Path
 
+from markdown_extract import markdown_to_html_node
 from textnode import TextNode, TextType
 
 
@@ -32,11 +33,45 @@ def copy_static(src: Path, dest: Path) -> None:
             logger.info(f"Copied file: {item} -> {dest_item}")
 
 
+def extract_title(markdown: str) -> str:
+    for line in markdown.splitlines():
+        if line.strip().startswith("# "):
+            return line.strip()[2:].strip()
+    raise ValueError("No H1 heading found in markdown")
+
+
+def generate_page(from_path: Path, template_path: Path, dest_path: Path) -> None:
+    logging.info(f"Generating page from {from_path} to {dest_path} using {template_path}")
+
+    from_content = from_path.read_text(encoding="utf-8")
+    template_content = template_path.read_text(encoding="utf-8")
+
+    html_node = markdown_to_html_node(from_content)
+    html_str = html_node.to_html()
+
+    title = extract_title(from_content)
+
+    result = (
+        template_content
+        .replace("{{ Title }}", title)
+        .replace("{{ Content }}", html_str)
+    )
+
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    dest_path.write_text(result, encoding="utf-8")
+    logging.info(f"Written HTML to {dest_path}")
+
 
 def main():
     static_dir = Path("static")
     public_dir = Path("public")
     copy_static(static_dir, public_dir)
+    generate_page(
+        Path("content/index.md"),
+        Path("template.html"),
+        Path("public/index.html")
+    )
+
 
 
 if __name__ == '__main__':
